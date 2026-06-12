@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Plantillas Zendesk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 13px;
+        }
+        .container,
+        .container input,
+        .container select,
+        .container textarea,
+        .container button,
+        .container label,
+        .container th,
+        .container td,
+        .container h1,
+        .container h2,
+        .container h3 {
+            font-size: 13px;
+        }
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        .input-field {
+            transition: border-color 0.2s ease;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .extract-field-found { background-color: #dcfce7; border-color: #86efac; }
+        .extract-field-missing { background-color: #fef9c3; border-color: #fde047; }
+        .crm-paste-area {
+            width: 7rem;
+            height: 1.375rem;
+            overflow-y: auto;
+            resize: none;
+            scrollbar-width: thin;
+        }
+        .crm-analyze-btn {
+            height: 1.375rem;
+            line-height: 1;
+        }
+        .template-grid {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 6px;
+            width: 100%;
+        }
+        .template-card {
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 11px 6px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            text-align: center;
+            line-height: 1.35;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .template-card:hover {
+            border-color: #93c5fd;
+            background: #f8fafc;
+        }
+        .template-card.copied {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+        .sync-fields-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-3 py-3 max-w-[1600px]">
+        <!-- Header -->
+        <header class="mb-2 flex items-center justify-between">
+            <h1 class="font-bold text-gray-800">Panel de Control - Plantillas Zendesk</h1>
+            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700 whitespace-nowrap">20%:</label>
+                    <input type="text" id="common-precio-20" class="input-field px-1.5 py-1 border border-gray-300 rounded w-14 text-sm bg-gray-50" placeholder="0" readonly title="20% del precio del plan">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700 whitespace-nowrap">30%:</label>
+                    <input type="text" id="common-precio-30" class="input-field px-1.5 py-1 border border-gray-300 rounded w-14 text-sm bg-gray-50" placeholder="0" readonly title="30% del precio del plan">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700 whitespace-nowrap">50%:</label>
+                    <input type="text" id="common-precio-50" class="input-field px-1.5 py-1 border border-gray-300 rounded w-14 text-sm bg-gray-50" placeholder="0" readonly title="50% del precio del plan">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700 whitespace-nowrap">Precio S/.:</label>
+                    <input type="text" id="common-precio" class="input-field px-1.5 py-1 border border-gray-300 rounded w-16 text-sm" placeholder="79.9">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">DNI:</label>
+                    <input type="text" id="dni-field" class="input-field px-2 py-1 border border-gray-300 rounded w-28 text-sm" placeholder="DNI">
+                </div>
+            </div>
+        </header>
+
+        <!-- Sección de Campos Comunes -->
+        <section class="bg-white rounded-lg shadow p-3 mb-2">
+            <h2 class="text-sm font-semibold text-gray-800 mb-1.5 flex items-center">
+                <svg class="w-4 h-4 mr-1.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                Campos Comunes
+            </h2>
+            
+            <!-- Fila 1: Cliente, Ticket, Boleta e Import CRM -->
+            <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-1.5">
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Cliente:</label>
+                    <input type="text" id="common-cliente" class="input-field px-1.5 py-1 border border-gray-300 rounded text-sm w-24" placeholder="Nombre">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Código:</label>
+                    <input type="text" id="common-codigo" class="input-field px-1.5 py-1 border border-gray-300 rounded text-sm w-[4.5rem]" placeholder="Cód">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Teléfono:</label>
+                    <input type="text" id="common-telefono" class="input-field px-1.5 py-1 border border-gray-300 rounded text-sm w-20" placeholder="Tel">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700 whitespace-nowrap">Ticket:</label>
+                    <input type="text" id="common-ticket-zendesk" class="input-field px-1.5 py-1 border border-gray-300 rounded text-sm w-20" placeholder="Ticket">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Boleta:</label>
+                    <input type="text" id="common-boleta" class="input-field px-1.5 py-1 border border-gray-300 rounded text-sm w-20" placeholder="Boleta">
+                </div>
+                <div class="flex items-end gap-1 ml-auto shrink-0">
+                    <div>
+                        <label class="text-[9px] font-semibold text-purple-600 uppercase tracking-wide block mb-0.5 text-right leading-none">
+                            Importar CRM (WOW / Porraso)
+                        </label>
+                        <textarea id="paste-text-area" rows="1"
+                            class="crm-paste-area input-field px-1 py-0 border border-gray-300 rounded text-[10px] font-mono leading-tight block"
+                            placeholder="Pegar bloque…"></textarea>
+                    </div>
+                    <button onclick="analizarTextoPegado()" title="Analizar y aplicar"
+                        class="crm-analyze-btn shrink-0 bg-purple-600 hover:bg-purple-700 text-white font-medium px-1.5 rounded text-[10px] whitespace-nowrap">
+                        🔍 Analizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Fila 2: TBS -->
+            <div class="flex flex-wrap gap-2 items-center mb-1.5">
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">TBS - S/N ONT:</label>
+                    <input type="text" id="additional-tbs-ont" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-28" placeholder="S/N ONT">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">TBS - Rango:</label>
+                    <select id="additional-tbs-rango" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-32">
+                        <option value="">Seleccionar rango</option>
+                        <option value="hoy">Hoy</option>
+                        <option value="ayer">Ayer</option>
+                        <option value="1 semana">1 semana</option>
+                        <option value="2 semanas">2 semanas</option>
+                        <option value="1 mes">1 mes</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">TBS - Descartes:</label>
+                    <select id="additional-tbs-descartes" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-36">
+                        <option value="">Seleccionar descarte</option>
+                        <option value="Prioridad">Prioridad</option>
+                        <option value="Problemas con ONT">Problemas con ONT</option>
+                        <option value="Problemas de Fibra">Problemas de Fibra</option>
+                        <option value="Problemas de potencia">Problemas de potencia</option>
+                        <option value="Sin señal">Sin señal</option>
+                        <option value="Velocidad e intermitencia">Velocidad e intermitencia</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">TBS - Detalle:</label>
+                    <input type="text" id="additional-tbs-detalle" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-32" placeholder="Detalle">
+                </div>
+            </div>
+
+            <!-- Fila 3: Dirección -->
+            <div class="flex flex-wrap gap-2 items-center mb-1.5">
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Dirección:</label>
+                    <input type="text" id="common-direccion" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-32" placeholder="Calle / Nro">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Depto:</label>
+                    <input type="text" id="common-departamento" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-24" placeholder="Depto">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Provincia:</label>
+                    <input type="text" id="common-provincia" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-24" placeholder="Provincia">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Ciudad:</label>
+                    <input type="text" id="common-ciudad" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-24" placeholder="Ciudad">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Referencia:</label>
+                    <input type="text" id="common-referencia" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-28" placeholder="Referencia">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Día:</label>
+                    <input type="date" id="common-dia" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-32">
+                </div>
+            </div>
+
+            <!-- Fila 4: Hora, Gestor, acciones -->
+            <div class="flex flex-wrap gap-2 items-center mb-1.5">
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Hora:</label>
+                    <select id="common-hora" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-48">
+                        <option value="">Seleccionar hora</option>
+                        <option value="MAÑANA 08:00AM - 10:00AM">MAÑANA 08:00AM - 10:00AM</option>
+                        <option value="MAÑANA 10:00AM - 12:00PM">MAÑANA 10:00AM - 12:00PM</option>
+                        <option value="TARDE 12:00PM - 02:00PM">TARDE 12:00PM - 02:00PM</option>
+                        <option value="TARDE 02:00PM - 04:00PM">TARDE 02:00PM - 04:00PM</option>
+                        <option value="TARDE 04:00PM - 06:00PM">TARDE 04:00PM - 06:00PM</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Gestor:</label>
+                    <select id="additional-gestor" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-40">
+                        <option value="">Seleccionar gestor</option>
+                        <option value="MAIRA MENACHO">MAIRA MENACHO</option>
+                        <option value="DAVID PAREDES">DAVID PAREDES</option>
+                        <option value="CARMEN ROJAS">CARMEN ROJAS</option>
+                        <option value="DAVID PIZANGO">DAVID PIZANGO</option>
+                        <option value="KATHERINE SANCHEZ">KATHERINE SANCHEZ</option>
+                        <option value="GUSTAVO LOPEZ">GUSTAVO LOPEZ</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1.5 ml-auto">
+                    <button onclick="guardarDatos()" class="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-2.5 rounded transition-colors text-xs">
+                        💾 Guardar
+                    </button>
+                    <button onclick="eliminarTodo()" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-2.5 rounded transition-colors text-xs">
+                        🗑️ Eliminar todo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Fila 5: Motivo -->
+            <div class="flex flex-wrap gap-2 items-center">
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Motivo:</label>
+                    <input type="text" id="common-motivo" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-28" placeholder="Motivo" value="economico">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Asesor:</label>
+                    <input type="text" id="common-asesor" class="input-field px-2 py-1 border border-gray-300 rounded text-sm bg-blue-50 w-36" value="JEYSSON AYALA SAEZ" readonly>
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Nota - Monto:</label>
+                    <input type="text" id="additional-nota-monto" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-24" placeholder="Monto" value="10">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">Cond. - Boleta anular:</label>
+                    <input type="text" id="additional-condonacion-boleta-anular" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-28" placeholder="Boleta anular">
+                </div>
+                <div class="flex items-center gap-1">
+                    <label class="text-xs font-medium text-gray-700">React. - Texto:</label>
+                    <input type="text" id="additional-reactivacion-texto" class="input-field px-2 py-1 border border-gray-300 rounded text-sm w-40" placeholder="Texto de continuidad">
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Plantillas -->
+        <section>
+            <h2 class="font-semibold text-gray-800 mb-2 flex items-center">
+                <svg class="w-4 h-4 mr-1.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Plantillas Individuales
+            </h2>
+
+            <div class="template-grid">
+                <button type="button" class="template-card" data-template="default" onclick="copyTemplate('default')">Default</button>
+                <button type="button" class="template-card" data-template="visitas" onclick="copyTemplate('visitas')">Visitas Técnicas</button>
+                <button type="button" class="template-card" data-template="nota" onclick="copyTemplate('nota')">Nota de Crédito</button>
+                <button type="button" class="template-card" data-template="reactivacion" onclick="copyTemplate('reactivacion')">Reactivación</button>
+                <button type="button" class="template-card" data-template="tbs" onclick="copyTemplate('tbs')">TBS</button>
+                <button type="button" class="template-card" data-template="mudanza" onclick="copyTemplate('mudanza')">Mudanza</button>
+                <button type="button" class="template-card" data-template="condonacion" onclick="copyTemplate('condonacion')">Condonación</button>
+            </div>
+
+            <!-- Campos ocultos para sincronización con Campos Comunes -->
+            <div class="sync-fields-hidden" aria-hidden="true">
+                <input type="text" id="default-cliente">
+                <input type="text" id="default-telefono">
+                <input type="text" id="default-codigo">
+                <textarea id="default-saludos"></textarea>
+                <span id="default-preview"></span>
+
+                <input type="text" id="tbs-nombre">
+                <input type="text" id="tbs-codigo">
+                <input type="text" id="tbs-ont">
+                <input type="text" id="tbs-ticket">
+                <input type="text" id="tbs-zona">
+                <input type="text" id="tbs-rango">
+                <input type="text" id="tbs-descartes">
+                <textarea id="tbs-detalle"></textarea>
+                <input type="text" id="tbs-asesor" value="JEYSSON AYALA SAEZ" readonly>
+                <span id="tbs-preview"></span>
+
+                <input type="text" id="visitas-cliente">
+                <input type="text" id="visitas-codigo">
+                <input type="text" id="visitas-telefono">
+                <input type="text" id="visitas-direccion">
+                <input type="text" id="visitas-referencia">
+                <input type="text" id="visitas-dia">
+                <input type="text" id="visitas-hora">
+                <input type="text" id="visitas-gestor">
+                <span id="visitas-preview"></span>
+
+                <input type="text" id="mudanza-cliente">
+                <input type="text" id="mudanza-codigo">
+                <input type="text" id="mudanza-telefono">
+                <input type="text" id="mudanza-direccion">
+                <input type="text" id="mudanza-referencia">
+                <input type="text" id="mudanza-dia">
+                <input type="text" id="mudanza-hora">
+                <input type="text" id="mudanza-gestor">
+                <span id="mudanza-preview"></span>
+
+                <input type="text" id="nota-nombre">
+                <input type="text" id="nota-codigo">
+                <input type="text" id="nota-motivo">
+                <input type="text" id="nota-monto">
+                <input type="text" id="nota-boleta">
+                <input type="text" id="nota-telefono">
+                <span id="nota-preview"></span>
+
+                <input type="text" id="condonacion-cliente">
+                <input type="text" id="condonacion-telefono">
+                <input type="text" id="condonacion-codigo">
+                <input type="text" id="condonacion-boleta-pago">
+                <input type="text" id="condonacion-boleta-anular">
+                <span id="condonacion-preview"></span>
+
+                <input type="text" id="reactivacion-cliente">
+                <input type="text" id="reactivacion-telefono">
+                <input type="text" id="reactivacion-codigo">
+                <textarea id="reactivacion-texto"></textarea>
+                <span id="reactivacion-preview"></span>
+            </div>
+        </section>
+
+        <!-- Sección de Datos Guardados -->
+        <section class="bg-blue-50 rounded-xl shadow-lg p-4 mb-2 border border-blue-200">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Datos Guardados
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 bg-white rounded-lg">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Cliente</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Código</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Teléfono</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Ticket</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Dirección</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Referencia</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Día</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Hora</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Boleta</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Motivo</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">S/N ONT</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Rango</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Descartes</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Detalle</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Gestor</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Monto</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Boleta Anular</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Texto Reactivación</th>
+                            <th class="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="saved-data-table">
+                        <!-- Los datos guardados se mostrarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Editor de textos de plantillas -->
+        <section class="bg-white rounded-lg shadow p-3 mb-8 border border-slate-200">
+            <h2 class="text-sm font-semibold text-gray-800 mb-1 flex items-center">
+                <svg class="w-4 h-4 mr-1.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Editar textos de plantillas
+            </h2>
+            <p class="text-[11px] text-gray-500 mb-2">Usa llaves como <code class="bg-gray-100 px-1 rounded">{cliente}</code>, <code class="bg-gray-100 px-1 rounded">{telefono}</code>, <code class="bg-gray-100 px-1 rounded">{codigo}</code>, etc. Se guardan automáticamente en el navegador.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">Default</label><textarea id="tpl-edit-default" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">Visitas Técnicas</label><textarea id="tpl-edit-visitas" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">Nota de Crédito</label><textarea id="tpl-edit-nota" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">Reactivación</label><textarea id="tpl-edit-reactivacion" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">TBS</label><textarea id="tpl-edit-tbs" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">Mudanza</label><textarea id="tpl-edit-mudanza" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+                <div><label class="text-xs font-medium text-gray-700 block mb-0.5">Condonación</label><textarea id="tpl-edit-condonacion" rows="4" class="input-field w-full px-2 py-1 border border-gray-300 rounded text-xs font-mono"></textarea></div>
+            </div>
+            <button type="button" onclick="restaurarPlantillasDefault()" class="mt-2 text-xs text-amber-700 hover:text-amber-900 underline">Restaurar textos originales</button>
+        </section>
+
+        <!-- Depuración CRM (colapsado al final, fuera del panel principal) -->
+        <details class="mt-2 text-xs text-gray-400">
+            <summary class="cursor-pointer hover:text-gray-600 select-none">Depuración: campos detectados del CRM</summary>
+            <div class="mt-2 p-2 bg-gray-50 rounded border border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Cliente</span><input type="text" id="extract-cliente" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Código</span><input type="text" id="extract-codigo" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Teléfono</span><input type="text" id="extract-telefono" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Dirección</span><input type="text" id="extract-direccion" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Depto</span><input type="text" id="extract-departamento" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Provincia</span><input type="text" id="extract-provincia" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Ciudad</span><input type="text" id="extract-ciudad" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Email</span><input type="text" id="extract-email" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px] text-gray-500" readonly /></div>
+                <div class="flex gap-1 items-center"><span class="text-gray-500 w-14">Precio</span><input type="text" id="extract-precio" class="input-field flex-1 px-1 py-0.5 border rounded text-[11px]" readonly /></div>
+            </div>
+            <span id="extract-count-badge" class="hidden"></span>
+            <button id="btn-apply-extract" type="button" class="hidden" disabled></button>
+        </details>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
+        ¡Copiado al portapapeles!
+    </div>
+
+    <script>
+        // ─── Importación WOW / Porraso ───────────────────────────────────────────
+        let lastExtractedData = null;
+
+        const EXTRACT_UI = {
+            cliente: 'extract-cliente',
+            codigo: 'extract-codigo',
+            telefono: 'extract-telefono',
+            direccion: 'extract-direccion',
+            departamento: 'extract-departamento',
+            provincia: 'extract-provincia',
+            ciudad: 'extract-ciudad',
+            email: 'extract-email',
+            precio: 'extract-precio'
+        };
+
+        const EXTRACT_COUNT_KEYS = ['cliente', 'codigo', 'telefono', 'direccion', 'departamento', 'provincia', 'ciudad', 'precio'];
+
+        function parsePrecioSoles(text) {
+            if (!text) return '';
+            const patterns = [
+                /S\/\.?\s*([\d]+(?:[.,]\d+)?)/gi,
+                /(?:plan\s+asignado|solo-|atl\s*-\s*)[^0-9\n]*?([\d]+(?:[.,]\d+)?)\s*(?:$|\n|[^\d.,])/gi
+            ];
+            for (const re of patterns) {
+                const matches = [...text.matchAll(re)];
+                for (const m of matches) {
+                    const val = parseFloat(String(m[1]).replace(',', '.'));
+                    if (!isNaN(val) && val > 0 && val < 10000) return String(val);
+                }
+            }
+            return '';
+        }
+
+        function updatePrecioPorcentajes() {
+            const raw = document.getElementById('common-precio')?.value.trim().replace(',', '.') || '';
+            const precio = parseFloat(raw);
+            const p20 = document.getElementById('common-precio-20');
+            const p30 = document.getElementById('common-precio-30');
+            const p50 = document.getElementById('common-precio-50');
+            if (!p20 || !p30 || !p50) return;
+            if (isNaN(precio)) {
+                p20.value = p30.value = p50.value = '';
+                return;
+            }
+            p20.value = precio-(precio * 0.2).toFixed(2);
+            p30.value = precio-(precio * 0.3).toFixed(2);
+            p50.value = precio-(precio * 0.5).toFixed(2);
+        }
+
+        function setFieldAndSync(fieldId, value) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            field.value = value || '';
+            const evt = field.tagName === 'SELECT' ? 'change' : 'input';
+            field.dispatchEvent(new Event(evt, { bubbles: true }));
+        }
+
+        function showToastMsg(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => { toast.textContent = '¡Copiado al portapapeles!'; }, 300);
+            }, 2500);
+        }
+
+        function parseGeoLine(line) {
+            if (!line || line === '-') return null;
+            const m = line.match(/^([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]{1,40}),\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]{1,40}),\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]{1,40})$/);
+            if (!m) return null;
+            return {
+                departamento: m[1].trim().toUpperCase(),
+                provincia: m[2].trim().toUpperCase(),
+                ciudad: m[3].trim().toUpperCase()
+            };
+        }
+
+        function esLineaIgnorable(line) {
+            return !line || line === '-' || /^\d+$/.test(line) || /@/.test(line) || /\b20\d{9}\b/.test(line);
+        }
+
+        function parseUbicacion(lines) {
+            const ubicacion = { direccion: '', departamento: '', provincia: '', ciudad: '' };
+            const streetPrefix = /^(?:Ca\.|Av\.|Jr\.|Calle|Mz\.|Urb\.|Psje\.|Prol\.|Avenida|Pasaje)/i;
+
+            // Caso principal: calle en una línea, DEPTO/PROV/CIUDAD en la siguiente
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!streetPrefix.test(line)) continue;
+
+                ubicacion.direccion = line;
+                if (i + 1 < lines.length) {
+                    const geo = parseGeoLine(lines[i + 1].trim());
+                    if (geo) Object.assign(ubicacion, geo);
+                }
+                return ubicacion;
+            }
+
+            // Fallback: cualquier línea seguida de DEPTO, PROV, CIUDAD
+            for (let i = 0; i < lines.length - 1; i++) {
+                const line = lines[i].trim();
+                const geo = parseGeoLine(lines[i + 1].trim());
+                if (geo && !esLineaIgnorable(line) && !parseGeoLine(line)) {
+                    ubicacion.direccion = line;
+                    Object.assign(ubicacion, geo);
+                    return ubicacion;
+                }
+            }
+
+            // Solo geo sin calle detectada
+            for (let i = 0; i < lines.length; i++) {
+                const geo = parseGeoLine(lines[i].trim());
+                if (geo) {
+                    Object.assign(ubicacion, geo);
+                    if (i > 0 && !esLineaIgnorable(lines[i - 1]) && !parseGeoLine(lines[i - 1])) {
+                        ubicacion.direccion = lines[i - 1].trim();
+                    }
+                    break;
+                }
+            }
+
+            return ubicacion;
+        }
+
+        function parseWowCrmText(rawText) {
+            const result = {
+                cliente: '', codigo: '', telefono: '', direccion: '',
+                departamento: '', provincia: '', ciudad: '', email: '', precio: ''
+            };
+            if (!rawText || !rawText.trim()) return result;
+
+            const text = rawText.replace(/\r\n/g, '\n');
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            const codigos = [...text.matchAll(/\b(20\d{9})\b/g)].map(m => m[1]);
+            if (codigos.length) result.codigo = codigos[0];
+
+            const telefonos = [...text.matchAll(/\b(9\d{8})\b/g)]
+                .map(m => m[1])
+                .filter(t => t !== result.codigo);
+            if (telefonos.length) result.telefono = telefonos[0];
+
+            const ignoreWords = ['JEYSSON', 'AYALA', 'WOW', 'CLIENTES', 'LISTA', 'SERVICIOS', 'ALERTA', 'VARIABLE'];
+            for (const line of lines.slice(0, 20)) {
+                const upper = line.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ,\s]/g, ' ').replace(/\s+/g, ' ').trim();
+                const match = upper.match(/^([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,})+,\s*[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{2,})$/);
+                if (match && match[1].length >= 12 && !ignoreWords.some(w => match[1].includes(w))) {
+                    result.cliente = match[1].trim();
+                    break;
+                }
+            }
+            if (!result.cliente) {
+                const inline = text.match(/([A-ZÁÉÍÓÚÑ]{2,}(?:\s+[A-ZÁÉÍÓÚÑ]{2,})+,\s*[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{2,})/);
+                if (inline && inline[1].length >= 12 && !ignoreWords.some(w => inline[1].includes(w))) {
+                    result.cliente = inline[1].trim();
+                }
+            }
+
+            const ubicacion = parseUbicacion(lines);
+            result.direccion = ubicacion.direccion;
+            result.departamento = ubicacion.departamento;
+            result.provincia = ubicacion.provincia;
+            result.ciudad = ubicacion.ciudad;
+
+            const email = text.match(/[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}/);
+            if (email) result.email = email[0];
+
+            result.precio = parsePrecioSoles(text);
+
+            return result;
+        }
+
+        function getDireccionCompleta() {
+            const calle = document.getElementById('common-direccion')?.value.trim() || '';
+            const depto = document.getElementById('common-departamento')?.value.trim() || '';
+            const prov = document.getElementById('common-provincia')?.value.trim() || '';
+            const ciudad = document.getElementById('common-ciudad')?.value.trim() || '';
+            const geo = [depto, prov, ciudad].filter(Boolean).join(', ');
+            if (calle && geo) return `${calle} ${geo}`;
+            return calle || geo;
+        }
+
+        function syncDireccionCompleta() {
+            const full = getDireccionCompleta();
+            ['visitas-direccion', 'mudanza-direccion'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = full;
+            });
+            const ciudad = document.getElementById('common-ciudad')?.value.trim();
+            const zona = document.getElementById('tbs-zona');
+            if (zona && ciudad) zona.value = ciudad;
+            updatePreview('visitas');
+            updatePreview('mudanza');
+            if (ciudad) updatePreview('tbs');
+        }
+
+        function mostrarResultadosExtraidos(data) {
+            lastExtractedData = data;
+            let encontrados = 0;
+
+            Object.entries(EXTRACT_UI).forEach(([key, id]) => {
+                const el = document.getElementById(id);
+                const val = data[key] || '';
+                el.value = val;
+                el.classList.remove('extract-field-found', 'extract-field-missing');
+                if (key === 'email') return;
+                if (!EXTRACT_COUNT_KEYS.includes(key)) return;
+                if (val) {
+                    el.classList.add('extract-field-found');
+                    encontrados++;
+                } else {
+                    el.classList.add('extract-field-missing');
+                }
+            });
+
+            const btnApply = document.getElementById('btn-apply-extract');
+            btnApply.disabled = encontrados === 0;
+
+            const badge = document.getElementById('extract-count-badge');
+            if (badge) {
+                if (encontrados > 0) {
+                    badge.textContent = `${encontrados} campo${encontrados !== 1 ? 's' : ''}`;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            return encontrados;
+        }
+
+        function aplicarDatosDesdeObjeto(d) {
+            if (d.cliente) setFieldAndSync('common-cliente', d.cliente);
+            if (d.codigo) setFieldAndSync('common-codigo', d.codigo);
+            if (d.telefono) setFieldAndSync('common-telefono', d.telefono);
+            if (d.direccion) setFieldAndSync('common-direccion', d.direccion);
+            if (d.departamento) setFieldAndSync('common-departamento', d.departamento);
+            if (d.provincia) setFieldAndSync('common-provincia', d.provincia);
+            if (d.ciudad) setFieldAndSync('common-ciudad', d.ciudad);
+            if (d.precio) {
+                setFieldAndSync('common-precio', d.precio);
+                updatePrecioPorcentajes();
+            }
+            syncDireccionCompleta();
+        }
+
+        function aplicarDatosExtraidos() {
+            aplicarDatosDesdeObjeto({
+                cliente: document.getElementById('extract-cliente').value.trim(),
+                codigo: document.getElementById('extract-codigo').value.trim(),
+                telefono: document.getElementById('extract-telefono').value.trim(),
+                direccion: document.getElementById('extract-direccion').value.trim(),
+                departamento: document.getElementById('extract-departamento').value.trim(),
+                provincia: document.getElementById('extract-provincia').value.trim(),
+                ciudad: document.getElementById('extract-ciudad').value.trim(),
+                precio: document.getElementById('extract-precio').value.trim()
+            });
+            showToastMsg('¡Datos aplicados a campos comunes y plantillas!');
+        }
+
+        function analizarTextoPegado() {
+            const text = document.getElementById('paste-text-area').value;
+            const data = parseWowCrmText(text);
+            const n = mostrarResultadosExtraidos(data);
+            if (n > 0) {
+                aplicarDatosDesdeObjeto(data);
+                document.getElementById('paste-text-area').value = '';
+                showToastMsg(`Datos aplicados (${n} campos)`);
+            } else {
+                showToastMsg('No se detectaron datos en el texto');
+            }
+        }
+
+        // ─── Plantillas editables ────────────────────────────────────────────────
+        const TPL_STORAGE_KEY = 'zendesk_tpl_formats_v1';
+
+        const DEFAULT_TPL_FORMATS = {
+            default: 'Cliente: {cliente}\nTeléfono: {telefono}\nCód. Cliente: {codigo}\n\n{saludos}',
+            tbs: 'Nombre: {nombre}\nCódigo: {codigo}\nS/N ONT: {ont}\nTicket Zendesk: {ticket}\nZona: {zona}\nRango: {rango}\nDescartes: {descartes}\nDetalle: {detalle}\nAsesor: {asesor}',
+            visitas: 'Cliente: {cliente}\nCod: {codigo}\nTeléfono: {telefono}\nDirección: {direccion}\nReferencia: {referencia}\nDía: {dia}\nHora: {hora}\nGestor: {gestor}',
+            mudanza: 'Cliente: {cliente}\nCod: {codigo}\nTeléfono: {telefono}\nDirección: {direccion}\nReferencia: {referencia}\nDía: {dia}\nHora: {hora}\nGestor: {gestor}',
+            nota: 'Nombre: {nombre}\nCódigo: {codigo}\nMotivo: {motivo}\nMonto: {monto}\nBoleta: {boleta}\nTeléfono: {telefono}',
+            condonacion: 'Cliente: {cliente}\nTeléfono: {telefono}\nCód: {codigo}\nBoleta pagó: {boleta_pago}\nBoleta anular: {boleta_anular}',
+            reactivacion: 'Cliente: {cliente}\nTeléfono: {telefono}\nCód: {codigo}\n\n{texto}'
+        };
+
+        let tplFormats = { ...DEFAULT_TPL_FORMATS };
+
+        function loadTplFormats() {
+            try {
+                const saved = localStorage.getItem(TPL_STORAGE_KEY);
+                if (saved) tplFormats = { ...DEFAULT_TPL_FORMATS, ...JSON.parse(saved) };
+            } catch (e) { /* ignore */ }
+        }
+
+        function saveTplFormats() {
+            localStorage.setItem(TPL_STORAGE_KEY, JSON.stringify(tplFormats));
+        }
+
+        function initTemplateEditors() {
+            loadTplFormats();
+            Object.keys(DEFAULT_TPL_FORMATS).forEach(name => {
+                const el = document.getElementById(`tpl-edit-${name}`);
+                if (!el) return;
+                el.value = tplFormats[name];
+                el.addEventListener('input', () => {
+                    tplFormats[name] = el.value;
+                    saveTplFormats();
+                    updatePreview(name);
+                });
+            });
+        }
+
+        function restaurarPlantillasDefault() {
+            tplFormats = { ...DEFAULT_TPL_FORMATS };
+            saveTplFormats();
+            Object.keys(DEFAULT_TPL_FORMATS).forEach(name => {
+                const el = document.getElementById(`tpl-edit-${name}`);
+                if (el) el.value = tplFormats[name];
+                updatePreview(name);
+            });
+            showToastMsg('Plantillas restauradas');
+        }
+
+        function getTemplateFieldValues(template) {
+            const g = id => document.getElementById(id)?.value || '';
+            switch (template) {
+                case 'default':
+                    return { cliente: g('default-cliente'), telefono: g('default-telefono'), codigo: g('default-codigo'), saludos: g('default-saludos') };
+                case 'tbs':
+                    return { nombre: g('tbs-nombre'), codigo: g('tbs-codigo'), ont: g('tbs-ont'), ticket: g('tbs-ticket'), zona: g('tbs-zona'), rango: g('tbs-rango'), descartes: g('tbs-descartes'), detalle: g('tbs-detalle'), asesor: g('tbs-asesor') };
+                case 'visitas':
+                    return { cliente: g('visitas-cliente'), codigo: g('visitas-codigo'), telefono: g('visitas-telefono'), direccion: g('visitas-direccion'), referencia: g('visitas-referencia'), dia: g('visitas-dia'), hora: g('visitas-hora'), gestor: g('visitas-gestor') };
+                case 'mudanza':
+                    return { cliente: g('mudanza-cliente'), codigo: g('mudanza-codigo'), telefono: g('mudanza-telefono'), direccion: g('mudanza-direccion'), referencia: g('mudanza-referencia'), dia: g('mudanza-dia'), hora: g('mudanza-hora'), gestor: g('mudanza-gestor') };
+                case 'nota':
+                    return { nombre: g('nota-nombre'), codigo: g('nota-codigo'), motivo: g('nota-motivo'), monto: g('nota-monto'), boleta: g('nota-boleta'), telefono: g('nota-telefono') };
+                case 'condonacion':
+                    return { cliente: g('condonacion-cliente'), telefono: g('condonacion-telefono'), codigo: g('condonacion-codigo'), boleta_pago: g('condonacion-boleta-pago'), boleta_anular: g('condonacion-boleta-anular') };
+                case 'reactivacion':
+                    return { cliente: g('reactivacion-cliente'), telefono: g('reactivacion-telefono'), codigo: g('reactivacion-codigo'), texto: g('reactivacion-texto') };
+                default:
+                    return {};
+            }
+        }
+
+        function buildTemplateText(template) {
+            const fmt = tplFormats[template] || DEFAULT_TPL_FORMATS[template] || '';
+            const fields = getTemplateFieldValues(template);
+            return fmt.replace(/\{(\w+)\}/g, (_, key) => fields[key] ?? '');
+        }
+
+        // Mapeo de campos comunes a plantillas
+        const fieldMapping = {
+            'additional-tbs-ont': [
+                { template: 'tbs', field: 'tbs-ont' }
+            ],
+            'additional-tbs-zona': [
+                { template: 'tbs', field: 'tbs-zona' }
+            ],
+            'additional-tbs-rango': [
+                { template: 'tbs', field: 'tbs-rango' }
+            ],
+            'additional-tbs-descartes': [
+                { template: 'tbs', field: 'tbs-descartes' }
+            ],
+            'additional-tbs-detalle': [
+                { template: 'tbs', field: 'tbs-detalle' }
+            ],
+            'additional-gestor': [
+                { template: 'visitas', field: 'visitas-gestor' },
+                { template: 'mudanza', field: 'mudanza-gestor' }
+            ],
+            'additional-nota-monto': [
+                { template: 'nota', field: 'nota-monto' }
+            ],
+            'additional-condonacion-boleta-anular': [
+                { template: 'condonacion', field: 'condonacion-boleta-anular' }
+            ],
+            'additional-reactivacion-texto': [
+                { template: 'reactivacion', field: 'reactivacion-texto' }
+            ],
+            'common-cliente': [
+                { template: 'default', field: 'default-cliente' },
+                { template: 'tbs', field: 'tbs-nombre' },
+                { template: 'visitas', field: 'visitas-cliente' },
+                { template: 'mudanza', field: 'mudanza-cliente' },
+                { template: 'nota', field: 'nota-nombre' },
+                { template: 'condonacion', field: 'condonacion-cliente' },
+                { template: 'reactivacion', field: 'reactivacion-cliente' }
+            ],
+            'common-codigo': [
+                { template: 'default', field: 'default-codigo' },
+                { template: 'tbs', field: 'tbs-codigo' },
+                { template: 'visitas', field: 'visitas-codigo' },
+                { template: 'mudanza', field: 'mudanza-codigo' },
+                { template: 'nota', field: 'nota-codigo' },
+                { template: 'condonacion', field: 'condonacion-codigo' },
+                { template: 'reactivacion', field: 'reactivacion-codigo' }
+            ],
+            'common-telefono': [
+                { template: 'default', field: 'default-telefono' },
+                { template: 'visitas', field: 'visitas-telefono' },
+                { template: 'mudanza', field: 'mudanza-telefono' },
+                { template: 'nota', field: 'nota-telefono' },
+                { template: 'condonacion', field: 'condonacion-telefono' },
+                { template: 'reactivacion', field: 'reactivacion-telefono' }
+            ],
+            'common-direccion': [],
+            'common-departamento': [],
+            'common-provincia': [],
+            'common-ciudad': [
+                { template: 'tbs', field: 'tbs-zona' }
+            ],
+            'common-referencia': [
+                { template: 'visitas', field: 'visitas-referencia' },
+                { template: 'mudanza', field: 'mudanza-referencia' }
+            ],
+            'common-dia': [
+                { template: 'visitas', field: 'visitas-dia' },
+                { template: 'mudanza', field: 'mudanza-dia' }
+            ],
+            'common-hora': [
+                { template: 'visitas', field: 'visitas-hora' },
+                { template: 'mudanza', field: 'mudanza-hora' }
+            ],
+            'common-boleta': [
+                { template: 'nota', field: 'nota-boleta' },
+                { template: 'condonacion', field: 'condonacion-boleta-pago' }
+            ],
+            'common-ticket-zendesk': [
+                { template: 'tbs', field: 'tbs-ticket' }
+            ],
+            'common-motivo': [
+                { template: 'nota', field: 'nota-motivo' }
+            ],
+            'common-asesor': [
+                { template: 'tbs', field: 'tbs-asesor' }
+            ]
+        };
+
+        // Agregar event listeners a campos comunes y adicionales
+        Object.keys(fieldMapping).forEach(commonFieldId => {
+            const commonField = document.getElementById(commonFieldId);
+            if (commonField) {
+                const eventType = commonField.tagName === 'SELECT' ? 'change' : 'input';
+                commonField.addEventListener(eventType, (e) => {
+                    const value = e.target.value;
+                    fieldMapping[commonFieldId].forEach(mapping => {
+                        const targetField = document.getElementById(mapping.field);
+                        if (targetField) {
+                            targetField.value = value;
+                            updatePreview(mapping.template);
+                        }
+                    });
+                    if (['common-direccion', 'common-departamento', 'common-provincia', 'common-ciudad'].includes(commonFieldId)) {
+                        syncDireccionCompleta();
+                    }
+                });
+            }
+        });
+
+        // Agregar event listeners a campos individuales para actualizar vista previa
+        const allTemplateFields = document.querySelectorAll('[id^="default-"], [id^="tbs-"], [id^="visitas-"], [id^="mudanza-"], [id^="nota-"], [id^="condonacion-"], [id^="reactivacion-"]');
+        allTemplateFields.forEach(field => {
+            field.addEventListener('input', (e) => {
+                const templateName = e.target.id.split('-')[0];
+                updatePreview(templateName);
+            });
+        });
+
+        // Función para actualizar vista previa
+        function updatePreview(template) {
+            const previewElement = document.getElementById(`${template}-preview`);
+            if (previewElement) previewElement.textContent = buildTemplateText(template);
+        }
+
+        // Función para copiar plantilla al portapapeles
+        function copyTemplate(template) {
+            const textToCopy = buildTemplateText(template);
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast();
+                const card = document.querySelector(`.template-card[data-template="${template}"]`);
+                if (card) {
+                    card.classList.add('copied');
+                    setTimeout(() => card.classList.remove('copied'), 800);
+                }
+            }).catch(err => {
+                console.error('Error al copiar: ', err);
+            });
+        }
+
+        // Función para mostrar notificación toast
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+
+        // Inicializar vistas previas en cada cuadro
+        initTemplateEditors();
+        ['default', 'tbs', 'visitas', 'mudanza', 'nota', 'condonacion', 'reactivacion'].forEach(updatePreview);
+
+        const precioField = document.getElementById('common-precio');
+        if (precioField) {
+            precioField.addEventListener('input', updatePrecioPorcentajes);
+        }
+
+        // Establecer fecha actual en el campo Día y sincronizar
+        const today = new Date().toISOString().split('T')[0];
+        const diaField = document.getElementById('common-dia');
+        if (diaField) {
+            diaField.value = today;
+            diaField.min = today;
+            // Sincronizar la fecha con las plantillas
+            fieldMapping['common-dia'].forEach(mapping => {
+                const targetField = document.getElementById(mapping.field);
+                if (targetField) {
+                    targetField.value = today;
+                    updatePreview(mapping.template);
+                }
+            });
+        }
+
+        // Establecer valores por defecto y sincronizar
+        const motivoField = document.getElementById('common-motivo');
+        if (motivoField && motivoField.value === 'economico') {
+            fieldMapping['common-motivo'].forEach(mapping => {
+                const targetField = document.getElementById(mapping.field);
+                if (targetField) {
+                    targetField.value = motivoField.value;
+                    updatePreview(mapping.template);
+                }
+            });
+        }
+
+        const notaMontoField = document.getElementById('additional-nota-monto');
+        if (notaMontoField && notaMontoField.value === '10') {
+            fieldMapping['additional-nota-monto'].forEach(mapping => {
+                const targetField = document.getElementById(mapping.field);
+                if (targetField) {
+                    targetField.value = notaMontoField.value;
+                    updatePreview(mapping.template);
+                }
+            });
+        }
+
+        // Función para guardar datos en la tabla
+        function guardarDatos() {
+            const data = {
+                cliente: document.getElementById('common-cliente').value,
+                codigo: document.getElementById('common-codigo').value,
+                telefono: document.getElementById('common-telefono').value,
+                ticketZendesk: document.getElementById('common-ticket-zendesk').value,
+                direccion: getDireccionCompleta(),
+                departamento: document.getElementById('common-departamento').value,
+                provincia: document.getElementById('common-provincia').value,
+                ciudad: document.getElementById('common-ciudad').value,
+                referencia: document.getElementById('common-referencia').value,
+                dia: document.getElementById('common-dia').value,
+                hora: document.getElementById('common-hora').value,
+                boleta: document.getElementById('common-boleta').value,
+                motivo: document.getElementById('common-motivo').value,
+                ont: document.getElementById('additional-tbs-ont').value,
+                rango: document.getElementById('additional-tbs-rango').value,
+                descartes: document.getElementById('additional-tbs-descartes').value,
+                detalle: document.getElementById('additional-tbs-detalle').value,
+                gestor: document.getElementById('additional-gestor').value,
+                monto: document.getElementById('additional-nota-monto').value,
+                boletaAnular: document.getElementById('additional-condonacion-boleta-anular').value,
+                textoReactivacion: document.getElementById('additional-reactivacion-texto').value
+            };
+
+            const tableBody = document.getElementById('saved-data-table');
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            row.innerHTML = `
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.cliente}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.codigo}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.telefono}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.ticketZendesk}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.direccion}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.referencia}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.dia}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.hora}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.boleta}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.motivo}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.ont}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.rango}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.descartes}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.detalle}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.gestor}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.monto}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.boletaAnular}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">${data.textoReactivacion}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">
+                    <button onclick="eliminarFila(this)" class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded">Eliminar</button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+            
+            // Mostrar notificación
+            const toast = document.getElementById('toast');
+            toast.textContent = '¡Datos guardados exitosamente!';
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.textContent = '¡Copiado al portapapeles!';
+                }, 300);
+            }, 2000);
+        }
+
+        // Función para eliminar una fila específica
+        function eliminarFila(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        // Función para eliminar todos los campos completados excepto los valores por defecto
+        function eliminarTodo() {
+            // Campos comunes - limpiar todos excepto asesor (readonly)
+            document.getElementById('common-cliente').value = '';
+            document.getElementById('common-codigo').value = '';
+            document.getElementById('common-telefono').value = '';
+            document.getElementById('common-direccion').value = '';
+            document.getElementById('common-departamento').value = '';
+            document.getElementById('common-provincia').value = '';
+            document.getElementById('common-ciudad').value = '';
+            document.getElementById('common-referencia').value = '';
+            document.getElementById('common-ticket-zendesk').value = '';
+            document.getElementById('common-boleta').value = '';
+            document.getElementById('common-precio').value = '';
+            updatePrecioPorcentajes();
+            
+            // Campos adicionales - limpiar todos excepto monto (default: 10) y motivo (default: economico)
+            document.getElementById('additional-tbs-ont').value = '';
+            document.getElementById('additional-tbs-rango').value = '';
+            document.getElementById('additional-tbs-descartes').value = '';
+            document.getElementById('additional-tbs-detalle').value = '';
+            document.getElementById('additional-gestor').value = '';
+            document.getElementById('additional-condonacion-boleta-anular').value = '';
+            document.getElementById('additional-reactivacion-texto').value = '';
+            
+            // Sincronizar los cambios con las plantillas
+            Object.keys(fieldMapping).forEach(commonFieldId => {
+                const commonField = document.getElementById(commonFieldId);
+                if (commonField && !commonField.readOnly) {
+                    const value = commonField.value;
+                    fieldMapping[commonFieldId].forEach(mapping => {
+                        const targetField = document.getElementById(mapping.field);
+                        if (targetField && !targetField.readOnly) {
+                            targetField.value = value;
+                            updatePreview(mapping.template);
+                        }
+                    });
+                }
+            });
+            syncDireccionCompleta();
+            
+            // Mostrar notificación
+            const toast = document.getElementById('toast');
+            toast.textContent = '¡Campos limpiados exitosamente!';
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.textContent = '¡Copiado al portapapeles!';
+                }, 300);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

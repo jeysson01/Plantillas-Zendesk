@@ -1,5 +1,5 @@
 {
     "rewrites": [
-      { "source": "/", "destination": "/zendesk-templatesv3.html" }
+      { "source": "/", "destination": "/zendesk-v4.html" }
     ]
   }
